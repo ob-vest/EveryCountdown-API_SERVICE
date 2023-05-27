@@ -3,16 +3,18 @@ import express from "express";
 import pg from "pg";
 
 const app = express();
-const port = 3000;
 
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({ extended: true }));
 
 const pool = new pg.Pool();
 
+const port = process.env.PORT || 3000;
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
+
 app.get("/movies", async (req, res) => {
   console.log(`getting movie`);
   try {
