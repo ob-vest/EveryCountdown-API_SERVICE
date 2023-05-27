@@ -9,17 +9,17 @@ require('dotenv').config();
 // app.use(bodyParser.urlencoded({ extended: true }));
 
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })
 app.get('/movies', async (req, res) => {
+  console.log(`getting movie`)
   try {
     const { rows } = await pool.query('SELECT * FROM movie LIMIT 1');
     res.send(rows[0]);
