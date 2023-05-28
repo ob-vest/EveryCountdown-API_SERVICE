@@ -17,15 +17,22 @@ app.get("/", (req, res) => {
 
 app.get("/movies", async (req, res) => {
   console.log(`getting movie`);
+
   try {
-    const { rows } = await pool.query("SELECT * FROM movie LIMIT 1");
-    res.send(rows[0]);
+    const { rows } = await pool.query("SELECT * FROM movie");
+    res.send(rows);
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal server error");
   }
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`);
+// });
+const server = app.listen(port, () => {
+  const address = server.address() as { address: string; port: number };
+  console.log(
+    `Example app listening on http://${address.address}:${address.port}`
+  );
 });
