@@ -11,6 +11,13 @@ const pool = new pg.Pool();
 
 const port = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -27,12 +34,6 @@ app.get("/movies", async (req, res) => {
   }
 });
 
-// app.listen(port, () => {
-//   console.log(`App listening on port ${port}`);
-// });
-const server = app.listen(port, () => {
-  const address = server.address() as { address: string; port: number };
-  console.log(
-    `Example app listening on http://${address.address}:${address.port}`
-  );
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`);
 });
