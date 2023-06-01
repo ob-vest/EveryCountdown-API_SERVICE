@@ -36,6 +36,21 @@ app.get("/movies", async (req, res) => {
   }
 });
 
+app.get("/movies/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log(`getting movie with ID ${id}`);
+
+  try {
+    const { rows } = await pool.query("SELECT * FROM movie WHERE id = $1", [
+      id,
+    ]);
+    res.send(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+});
+
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
