@@ -26,7 +26,9 @@ app.get("/movies", async (req, res) => {
   console.log(`getting movie`);
 
   try {
-    const { rows } = await pool.query("SELECT * FROM movie");
+    const { rows } = await pool.query(
+      "SELECT * FROM movie ORDER BY release_date"
+    );
     res.send(rows);
   } catch (error) {
     console.error(error);
