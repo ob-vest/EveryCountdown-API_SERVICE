@@ -9,7 +9,7 @@ const app = express();
 
 const pool = new pg.Pool();
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -41,9 +41,10 @@ app.get("/movies/:id", async (req, res) => {
   console.log(`getting movie with ID ${id}`);
 
   try {
-    const { rows } = await pool.query("SELECT * FROM movie WHERE id = $1", [
-      id,
-    ]);
+    const { rows } = await pool.query(
+      "SELECT movie.*, ARRAY_AGG(ROW(weblinks.title, weblinks.url, weblinks.date_added)) AS link FROM movie JOIN weblinks ON movie.id = weblinks.movie_id WHERE movie.id = $1 GROUP BY movie.id, movie.headline;",
+      [id]
+    );
     res.send(rows[0]);
   } catch (error) {
     console.error(error);
