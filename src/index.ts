@@ -42,7 +42,7 @@ app.get("/movies/:id", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      "SELECT movie.*, ARRAY_AGG(ROW(weblinks.title, weblinks.url, weblinks.date_added)) AS link FROM movie JOIN weblinks ON movie.id = weblinks.movie_id WHERE movie.id = $1 GROUP BY movie.id, movie.headline;",
+      "SELECT movie.*, ARRAY_AGG(ROW(weblinks.title, weblinks.url, weblinks.date_added)) AS link FROM movie LEFT JOIN weblinks ON movie.id = weblinks.movie_id WHERE movie.id = $1 GROUP BY movie.id, movie.headline;",
       [id]
     );
     res.send(rows[0]);
