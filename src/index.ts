@@ -44,7 +44,7 @@ app.get("/movies/:id", async (req, res) => {
     // This query returns a single row, so we use rows[0] and selects all the columns from the movie table and the weblink table
     // by using LEFT JOIN it will return all the rows from the movie table and the matching rows from the weblink table. If there is no match, it will leave it out.
     const { rows } = await pool.query(
-      "SELECT movie.*,weblink_links.link,video_links.videos FROM movie LEFT JOIN(SELECT movie_id,ARRAY_AGG(ROW(title,url,date_added))AS link FROM weblink GROUP BY movie_id)AS weblink_links ON movie.id=weblink_links.movie_id LEFT JOIN(SELECT movie_id,ARRAY_AGG(ROW(title,description,url))AS videos FROM video GROUP BY movie_id)AS video_links ON movie.id=video_links.movie_id WHERE movie.id=$1;",
+      "SELECT movie.*,weblink_links.links,video_links.videos FROM movie LEFT JOIN(SELECT movie_id,json_agg(json_build_object('title',title,'url',url,'date_added',date_added))AS links FROM weblink GROUP BY movie_id)AS weblink_links ON movie.id=weblink_links.movie_id LEFT JOIN(SELECT movie_id,json_agg(json_build_object('title',video.title,'description',video.description,'url',video.url))AS videos FROM video GROUP BY movie_id)AS video_links ON movie.id=video_links.movie_id WHERE movie.id=$1",
       [id]
     );
     res.send(rows[0]);
