@@ -102,7 +102,7 @@ function getAllRows(tableName: string) {
     try {
       // Selects tablename where its not the release date is not older than today by more than one day and orders it by release date
       const { rows } = await pool.query(
-        `SELECT*FROM${tableName}WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
+        `SELECT*FROM ${tableName} WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
       );
       res.send(rows);
     } catch (error) {
