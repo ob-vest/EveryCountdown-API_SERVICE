@@ -32,7 +32,7 @@ app.get("/other", async (req, res) => {
   console.log(`getting sport, game, holiday`);
   try {
     const { rows } = await pool.query(
-      "SELECT headline,release_date,description,confirmed,subheadline,image_url FROM sport UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM game UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM holiday;"
+      "SELECT headline,release_date,description,confirmed,subheadline,image_url FROM sport WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM game WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM holiday WHERE release_date>=CURRENT_DATE-INTERVAL'1 day'"
     );
     res.send(rows);
   } catch (error) {
@@ -100,8 +100,9 @@ function getAllRows(tableName: string) {
     console.log(`getting ${tableName}`);
 
     try {
+      // Selects tablename where its not the release date is not older than today by more than one day and orders it by release date
       const { rows } = await pool.query(
-        `SELECT * FROM ${tableName} ORDER BY release_date`
+        `SELECT*FROM${tableName}WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
       );
       res.send(rows);
     } catch (error) {
