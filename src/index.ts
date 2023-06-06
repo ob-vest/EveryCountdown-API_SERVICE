@@ -28,21 +28,18 @@ app.get("/tv", getAllRows("tv"));
 app.get("/anime", getAllRows("anime"));
 app.get("/tech", getAllRows("tech"));
 app.get("/politics", getAllRows("politics"));
-app.get("/other", getAllRows("sport, game, holiday"));
-
-// app.get("/movies", async (req, res) => {
-//   console.log(`getting movie`);
-
-//   try {
-//     const { rows } = await pool.query(
-//       "SELECT * FROM movie ORDER BY release_date"
-//     );
-//     res.send(rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send("Internal server error");
-//   }
-// });
+app.get("/other", async (req, res) => {
+  console.log(`getting sport, game, holiday`);
+  try {
+    const { rows } = await pool.query(
+      "SELECT headline,release_date,description,confirmed,subheadline,image_url FROM sport UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM game UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM holiday;"
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+});
 
 app.get("/movies/:id", async (req, res) => {
   const id = req.params.id;
