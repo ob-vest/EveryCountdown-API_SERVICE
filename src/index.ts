@@ -1,4 +1,5 @@
 import express from "express";
+import { Request, Response } from "express";
 
 import pg from "pg";
 
@@ -22,33 +23,26 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/movies", async (req, res) => {
-  console.log(`getting movie`);
+app.get("/movies", getAllRows("movie"));
+app.get("/tv", getAllRows("tv"));
+app.get("/anime", getAllRows("anime"));
+app.get("/tech", getAllRows("tech"));
+app.get("/politics", getAllRows("politics"));
+app.get("/other", getAllRows("sport, game, holiday"));
 
-  try {
-    const { rows } = await pool.query(
-      "SELECT * FROM movie ORDER BY release_date"
-    );
-    res.send(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Internal server error");
-  }
-});
+// app.get("/movies", async (req, res) => {
+//   console.log(`getting movie`);
 
-app.get("/tech", async (req, res) => {
-  console.log(`getting movie`);
-
-  try {
-    const { rows } = await pool.query(
-      "SELECT * FROM tech ORDER BY release_date"
-    );
-    res.send(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Internal server error");
-  }
-});
+//   try {
+//     const { rows } = await pool.query(
+//       "SELECT * FROM movie ORDER BY release_date"
+//     );
+//     res.send(rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Internal server error");
+//   }
+// });
 
 app.get("/movies/:id", async (req, res) => {
   const id = req.params.id;
@@ -89,3 +83,33 @@ app.get("/tech/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
+
+// app.get("/tech", async (req, res) => {
+//   console.log(`getting movie`);
+
+//   try {
+//     const { rows } = await pool.query(
+//       "SELECT * FROM tech ORDER BY release_date"
+//     );
+//     res.send(rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("Internal server error");
+//   }
+// });
+
+function getAllRows(tableName: string) {
+  return async (req: Request, res: Response) => {
+    console.log(`getting ${tableName}`);
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT * FROM ${tableName} ORDER BY release_date`
+      );
+      res.send(rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("Internal server error");
+    }
+  };
+}
