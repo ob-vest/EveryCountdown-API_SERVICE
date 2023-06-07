@@ -42,7 +42,7 @@ app.get("/other", async (req, res) => {
   }
 });
 
-app.get("/movies/:id", getSelectedItem("movie"));
+// app.get("/movies/:id", getSelectedItem("movie"));
 app.get("/tv/:id", getSelectedItem("tv"));
 app.get("/anime/:id", getSelectedItem("anime"));
 app.get("/tech/:id", getSelectedItem("tech"));
@@ -95,7 +95,7 @@ function getSelectedItem(tableName: string) {
         `SELECT ${tableName}.*,weblink_links.links,video_links.videos FROM ${tableName} LEFT JOIN(SELECT ${tableName}_id,json_agg(json_build_object('title',title,'url',url,'date_added',date_added))AS links FROM weblink GROUP BY ${tableName}_id)AS weblink_links ON ${tableName}.id=weblink_links.${tableName}_id LEFT JOIN(SELECT ${tableName}_id,json_agg(json_build_object('title',video.title,'description',video.description,'url',video.url))AS videos FROM video GROUP BY ${tableName}_id)AS video_links ON ${tableName}.id=video_links.${tableName}_id WHERE ${tableName}.id=$1`,
         [id]
       );
-      res.send(rows);
+      res.send(rows[0]);
     } catch (error) {
       console.error(error);
       res.status(500).send("Internal server error");
