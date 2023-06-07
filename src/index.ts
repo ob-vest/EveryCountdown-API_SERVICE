@@ -42,7 +42,7 @@ app.get("/other", async (req, res) => {
   }
 });
 
-// app.get("/movies/:id", getSelectedItem("movie"));
+app.get("/movies/:id", getSelectedItem("movie"));
 app.get("/tv/:id", getSelectedItem("tv"));
 app.get("/anime/:id", getSelectedItem("anime"));
 app.get("/tech/:id", getSelectedItem("tech"));
