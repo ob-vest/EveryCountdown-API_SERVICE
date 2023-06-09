@@ -26,7 +26,7 @@ app.get("/popular", async (req, res) => {
   console.log(`getting ending soon items`);
   try {
     const { rows } = await pool.query(
-      "SELECT id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT id,headline,subheadline,release_date,confirmed,image_url FROM anime WHERE id IN(15,14,13)UNION ALL SELECT id,headline,subheadline,release_date,confirmed,image_url FROM movie WHERE id IN(14,15,16)UNION ALL SELECT id,headline,subheadline,release_date,confirmed,image_url FROM tv WHERE id IN(7,8,9))AS combined ORDER BY id;"
+      "SELECT type,id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT'anime' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM anime WHERE id IN(27,22)UNION ALL SELECT'movie' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM movie WHERE id IN(14,15,16)UNION ALL SELECT'game' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM game WHERE id IN(19,20)UNION ALL SELECT'tv' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM tv WHERE id IN(16,15))AS combined ORDER BY id;"
     );
     res.send(rows);
   } catch (error) {
