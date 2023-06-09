@@ -22,18 +22,23 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-
-app.get("/movies", getAllRows("movie"));
-app.get("/tv", getAllRows("tv"));
-app.get("/anime", getAllRows("anime"));
-app.get("/tech", getAllRows("tech"));
-app.get("/games", getAllRows("game"));
-// app.get("/politics", getAllRows("politics"));
-app.get("/other", async (req, res) => {
-  console.log(`getting sport, game, holiday`);
+app.get("/popular", async (req, res) => {
+  console.log(`getting ending soon items`);
   try {
     const { rows } = await pool.query(
-      "SELECT headline,release_date,description,confirmed,subheadline,image_url FROM sport WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM game WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT headline,release_date,description,confirmed,subheadline,image_url FROM holiday WHERE release_date>=CURRENT_DATE-INTERVAL'1 day'"
+      "SELECT id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT id,headline,subheadline,release_date,confirmed,image_url FROM anime WHERE id IN(15,14,13)UNION ALL SELECT id,headline,subheadline,release_date,confirmed,image_url FROM movie WHERE id IN(14,15,16)UNION ALL SELECT id,headline,subheadline,release_date,confirmed,image_url FROM tv WHERE id IN(7,8,9))AS combined ORDER BY id;"
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+});
+app.get("/ending", async (req, res) => {
+  console.log(`getting ending soon items`);
+  try {
+    const { rows } = await pool.query(
+      "SELECT TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT'anime' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM anime UNION ALL SELECT'movie' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM movie UNION ALL SELECT'tv' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM tv UNION ALL SELECT'game' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM game UNION ALL SELECT'tech' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM tech UNION ALL SELECT'holiday' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM holiday UNION ALL SELECT'sport' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM sport UNION ALL SELECT'politics' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM politics)AS combined WHERE release_date>CURRENT_DATE ORDER BY release_date ASC LIMIT 12;"
     );
     res.send(rows);
   } catch (error) {
@@ -42,11 +47,33 @@ app.get("/other", async (req, res) => {
   }
 });
 
-app.get("/movies/:id", getSelectedItem("movie"));
+app.get("/movie/catalog", getAllRows("movie"));
+app.get("/tv/catalog", getAllRows("tv"));
+app.get("/anime/catalog", getAllRows("anime"));
+app.get("/tech/catalog", getAllRows("tech"));
+app.get("/game/catalog", getAllRows("game"));
+// app.get("/politics", getAllRows("politics"));
+app.get("/other/catalog", async (req, res) => {
+  console.log(`getting sport, game, holiday`);
+  try {
+    const { rows } = await pool.query(
+      "SELECT*,'sport' AS TYPE FROM sport WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT*,'politics' AS TYPE FROM politics WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT*,'holiday' AS TYPE FROM holiday WHERE release_date>=CURRENT_DATE-INTERVAL'1 day'"
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+});
+
+app.get("/movie/:id", getSelectedItem("movie"));
 app.get("/tv/:id", getSelectedItem("tv"));
 app.get("/anime/:id", getSelectedItem("anime"));
 app.get("/tech/:id", getSelectedItem("tech"));
-app.get("/games/:id", getSelectedItem("game"));
+app.get("/game/:id", getSelectedItem("game"));
+app.get("/sport/:id", getSelectedItem("sport"));
+app.get("/politics/:id", getSelectedItem("politics"));
+app.get("/holiday/:id", getSelectedItem("holiday"));
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
@@ -109,7 +136,7 @@ function getAllRows(tableName: string) {
     try {
       // Selects tablename where its not the release date is not older than today by more than one day and orders it by release date
       const { rows } = await pool.query(
-        `SELECT*FROM ${tableName} WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
+        `SELECT*,'${tableName}' AS type FROM ${tableName} WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
       );
       res.send(rows);
     } catch (error) {
