@@ -18,10 +18,21 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
+app.get("/search", async (req, res) => {
+  const search = req.query.text;
+  console.log(`searching for items matching '${search}'`);
+  try {
+    const { rows } = await pool.query(
+      `SELECT'movie' AS type,headline,subheadline FROM movie WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'tv' AS type,headline,subheadline FROM tv WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'anime' AS type,headline,subheadline FROM anime WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'tech' AS type,headline,subheadline FROM tech WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'game' AS type,headline,subheadline FROM game WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'politics' AS type,headline,subheadline FROM politics WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'sport' AS type,headline,subheadline FROM sport WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)UNION SELECT'holiday' AS type,headline,subheadline FROM holiday WHERE to_tsvector('english',headline||' '||subheadline)@@ to_tsquery('english',$1)`,
+      [search]
+    );
+    res.send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
 });
+
 app.get("/popular", async (req, res) => {
   console.log(`getting ending soon items`);
   try {
