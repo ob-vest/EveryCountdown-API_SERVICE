@@ -34,7 +34,7 @@ app.get("/search", async (req, res) => {
 });
 
 app.get("/popular", async (req, res) => {
-  console.log(`getting ending soon items`);
+  console.log(`getting popular items`);
   try {
     const { rows } = await pool.query(
       "SELECT type,id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT'anime' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM anime WHERE id IN(27,22)UNION ALL SELECT'movie' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM movie WHERE id IN(14,15,16)UNION ALL SELECT'game' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM game WHERE id IN(19,20)UNION ALL SELECT'tv' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM tv WHERE id IN(16,15))AS combined ORDER BY id;"
@@ -66,6 +66,7 @@ app.get("/game/catalog", getAllRows("game"));
 app.get("/politics/catalog", getAllRows("politics"));
 app.get("/sport/catalog", getAllRows("sport"));
 app.get("/holiday/catalog", getAllRows("holiday"));
+
 app.get("/other/catalog", async (req, res) => {
   console.log(`getting sport, game, holiday`);
   try {
