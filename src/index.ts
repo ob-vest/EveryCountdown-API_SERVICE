@@ -63,7 +63,9 @@ app.get("/tv/catalog", getAllRows("tv"));
 app.get("/anime/catalog", getAllRows("anime"));
 app.get("/tech/catalog", getAllRows("tech"));
 app.get("/game/catalog", getAllRows("game"));
-// app.get("/politics", getAllRows("politics"));
+app.get("/politics/catalog", getAllRows("politics"));
+app.get("/sport/catalog", getAllRows("sport"));
+app.get("/holiday/catalog", getAllRows("holiday"));
 app.get("/other/catalog", async (req, res) => {
   console.log(`getting sport, game, holiday`);
   try {
