@@ -23,9 +23,10 @@ app.get("/search", async (req, res) => {
   console.log(`searching for items matching '${search}'`);
   try {
     const { rows } = await pool.query(
-      `SELECT'movie' AS type,id,headline,subheadline FROM movie WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'tv' AS type,id,headline,subheadline FROM tv WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'anime' AS type,id,headline,subheadline FROM anime WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'tech' AS type,id,headline,subheadline FROM tech WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'game' AS type,id,headline,subheadline FROM game WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'politics' AS type,id,headline,subheadline FROM politics WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'sport' AS type,id,headline,subheadline FROM sport WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1)UNION SELECT'holiday' AS type,id,headline,subheadline FROM holiday WHERE LOWER(headline)LIKE LOWER($1)OR LOWER(subheadline)LIKE LOWER($1);`,
+      `SELECT item.id, category.name AS type, item.headline, item.subheadline FROM item JOIN category ON item.category_id = category.id WHERE headline ILIKE $1 OR subheadline ILIKE $1;`,
       [`%${search}%`]
     );
+    console.log(rows);
     res.send(rows);
   } catch (error) {
     console.error(error);
@@ -37,7 +38,7 @@ app.get("/popular", async (req, res) => {
   console.log(`getting popular items`);
   try {
     const { rows } = await pool.query(
-      "SELECT type,id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT'anime' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM anime WHERE id IN(27,22)UNION ALL SELECT'movie' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM movie WHERE id IN(14,15,16)UNION ALL SELECT'game' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM game WHERE id IN(19,20)UNION ALL SELECT'tv' AS type,id,headline,subheadline,release_date,confirmed,image_url FROM tv WHERE id IN(16,15))AS combined ORDER BY id;"
+      "SELECT item.*,category.name AS TYPE FROM item JOIN category ON category.id=item.category_id WHERE item.id IN(73,56,77,122,142,99,148,65,58);"
     );
     res.send(rows);
   } catch (error) {
@@ -49,7 +50,7 @@ app.get("/ending", async (req, res) => {
   console.log(`getting ending soon items`);
   try {
     const { rows } = await pool.query(
-      `SELECT TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM(SELECT'anime' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM anime UNION ALL SELECT'movie' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM movie UNION ALL SELECT'tv' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM tv UNION ALL SELECT'game' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM game UNION ALL SELECT'tech' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM tech UNION ALL SELECT'holiday' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM holiday UNION ALL SELECT'sport' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM sport UNION ALL SELECT'politics' AS TYPE,id,headline,subheadline,release_date,confirmed,image_url FROM politics)AS combined WHERE release_date>CURRENT_DATE ORDER BY release_date ASC LIMIT 12;`
+      `SELECT item.id, category."name" AS type, headline, subheadline, release_date, confirmed, image_url FROM item JOIN category ON item.category_id = category.id WHERE release_date>CURRENT_DATE ORDER BY release_date ASC LIMIT 12;`
     );
     res.send(rows);
   } catch (error) {
@@ -71,7 +72,7 @@ app.get("/other/catalog", async (req, res) => {
   console.log(`getting sport, game, holiday`);
   try {
     const { rows } = await pool.query(
-      "SELECT*,'sport' AS TYPE FROM sport WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT*,'politics' AS TYPE FROM politics WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' UNION ALL SELECT*,'holiday' AS TYPE FROM holiday WHERE release_date>=CURRENT_DATE-INTERVAL'1 day'"
+      "SELECT item.*,category.name AS TYPE FROM item JOIN category ON category.id=item.category_id WHERE category.name IN('sport','politics','holiday')AND release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date;"
     );
     res.send(rows);
   } catch (error) {
@@ -80,14 +81,14 @@ app.get("/other/catalog", async (req, res) => {
   }
 });
 
-app.get("/movie/:id", getSelectedItem("movie"));
-app.get("/tv/:id", getSelectedItem("tv"));
-app.get("/anime/:id", getSelectedItem("anime"));
-app.get("/tech/:id", getSelectedItem("tech"));
-app.get("/game/:id", getSelectedItem("game"));
-app.get("/sport/:id", getSelectedItem("sport"));
-app.get("/politics/:id", getSelectedItem("politics"));
-app.get("/holiday/:id", getSelectedItem("holiday"));
+app.get("/movie/:id", getSelectedItem());
+app.get("/tv/:id", getSelectedItem());
+app.get("/anime/:id", getSelectedItem());
+app.get("/tech/:id", getSelectedItem());
+app.get("/game/:id", getSelectedItem());
+app.get("/sport/:id", getSelectedItem());
+app.get("/politics/:id", getSelectedItem());
+app.get("/holiday/:id", getSelectedItem());
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
@@ -125,15 +126,15 @@ app.listen(port, () => {
 //   }
 // });
 
-function getSelectedItem(tableName: string) {
+function getSelectedItem() {
   return async (req: Request, res: Response) => {
     const id = req.params.id;
-    console.log(`getting ${tableName} with ID ${id}`);
+    console.log(`getting item with ID ${id}`);
 
     try {
       // Selects tablename where its not the release date is not older than today by more than one day and orders it by release date
       const { rows } = await pool.query(
-        `SELECT ${tableName}.*,weblink_links.links,video_links.videos FROM ${tableName} LEFT JOIN(SELECT ${tableName}_id,json_agg(json_build_object('title',title,'url',url,'date_added',date_added))AS links FROM weblink GROUP BY ${tableName}_id)AS weblink_links ON ${tableName}.id=weblink_links.${tableName}_id LEFT JOIN(SELECT ${tableName}_id,json_agg(json_build_object('title',video.title,'description',video.description,'url',video.url))AS videos FROM video GROUP BY ${tableName}_id)AS video_links ON ${tableName}.id=video_links.${tableName}_id WHERE ${tableName}.id=$1`,
+        `SELECT item.*,weblink_links.links,video_links.videos FROM item LEFT JOIN(SELECT item_id,json_agg(json_build_object('title',title,'url',url,'date_added',created_at))AS links FROM weblink GROUP BY item_id)AS weblink_links ON item.id=weblink_links.item_id LEFT JOIN(SELECT item_id,json_agg(json_build_object('title',video.title,'url',video.url))AS videos FROM video GROUP BY item_id)AS video_links ON item.id=video_links.item_id WHERE item.id=$1`,
         [id]
       );
       res.send(rows[0]);
@@ -150,7 +151,7 @@ function getAllRows(tableName: string) {
     try {
       // Selects tablename where its not the release date is not older than today by more than one day and orders it by release date
       const { rows } = await pool.query(
-        `SELECT*,'${tableName}' AS type FROM ${tableName} WHERE release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date`
+        `SELECT item.*,category.name AS TYPE FROM item JOIN category ON category.id=item.category_id WHERE category."name"='${tableName}' AND release_date>=CURRENT_DATE-INTERVAL'1 day' ORDER BY release_date;`
       );
       res.send(rows);
     } catch (error) {
